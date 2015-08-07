@@ -4,27 +4,29 @@ package routes
 import "github.com/revel/revel"
 
 
-type tApp struct {}
-var App tApp
+type tGorpController struct {}
+var GorpController tGorpController
 
 
-func (_ tApp) Index(
+func (_ tGorpController) Begin(
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("App.Index", args).Url
+	return revel.MainRouter.Reverse("GorpController.Begin", args).Url
 }
 
-
-type tStage struct {}
-var Stage tStage
-
-
-func (_ tStage) Now(
+func (_ tGorpController) Commit(
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("Stage.Now", args).Url
+	return revel.MainRouter.Reverse("GorpController.Commit", args).Url
+}
+
+func (_ tGorpController) Rollback(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("GorpController.Rollback", args).Url
 }
 
 
@@ -84,6 +86,44 @@ func (_ tTestRunner) List(
 	args := make(map[string]string)
 	
 	return revel.MainRouter.Reverse("TestRunner.List", args).Url
+}
+
+
+type tStage struct {}
+var Stage tStage
+
+
+func (_ tStage) Now(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.Now", args).Url
+}
+
+func (_ tStage) Insert(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.Insert", args).Url
+}
+
+func (_ tStage) SelectAll(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
+}
+
+
+type tApp struct {}
+var App tApp
+
+
+func (_ tApp) Index(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("App.Index", args).Url
 }
 
 

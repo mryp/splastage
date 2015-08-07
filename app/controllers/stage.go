@@ -7,32 +7,46 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mryp/splastage/app/models"
 	"github.com/revel/revel"
 )
 
 //Stage 構造体
 type Stage struct {
-	*revel.Controller
+	GorpController
 }
 
-//StageItem 構造体
-type StageItem struct {
-	Kind      string   `json:"kind"`
-	StartTime string   `json:"start_time"`
-	EndTime   string   `json:"end_time"`
-	StageName []string `json:"stage_name"`
-}
+//変数
+var DefUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 //Now 現在のステージ情報を取得する
 func (c Stage) Now() revel.Result {
+	return c.RenderJson(getNowStageInfo())
+}
+
+//Insert 現在のステージ情報をDBに保存する
+func (c Stage) Insert() revel.Result {
 	itemList := getNowStageInfo()
-	//	item := StageItem{StartTime: "2015/8/6 11:00", EndTime: "2015/8/6 15:00", StageName: "ホッケ埠頭", Kind: "ナワバリバトル"}
-	//	itemList := [...]StageItem{item, item}
-	return c.RenderJson(itemList)
+	errorCount := 0
+	for _, item := range itemList {
+		err := models.StageInsertIfNotExists(DbMap, item)
+		if err != nil {
+			errorCount++
+		}
+	}
+
+	return c.RenderJson(errorCount)
+}
+
+//SelectAll 保存されているステージ情報をすべて取得し表示する
+func (c Stage) SelectAll() revel.Result {
+	stageList := models.StageSelectAll(DbMap)
+
+	return c.RenderJson(stageList)
 }
 
 //現在の最新データをダウンロードして返す
-func getNowStageInfo() []StageItem {
+func getNowStageInfo() []models.Stage {
 	unixTime := fmt.Sprintf("%d", time.Now().Unix())
 	url := "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/stages_info.json?" + unixTime
 
@@ -65,25 +79,40 @@ func jsonUnmarshal(data []byte) (interface{}, error) {
 }
 
 //ステージ情報のJSONオブジェクトからステージ情報リストを作成して返す
-func jsonParseRoot(data interface{}) []StageItem {
-	stageList := []StageItem{}
+func jsonParseRoot(data interface{}) []models.Stage {
+	stageList := []models.Stage{}
 	for _, item := range data.([]interface{}) {
-		stage := StageItem{Kind: "ナワバリバトル"}
+		startTime := DefUnknownTime
+		endTime := DefUnknownTime
+		nameList := []string{}
 		for key, v := range item.(map[string]interface{}) {
 			switch key {
 			case "datetime_term_begin":
-				stage.StartTime = v.(string)
+				startTime = convertTermTimeStr(v.(string))
 			case "datetime_term_end":
-				stage.EndTime = v.(string)
+				endTime = convertTermTimeStr(v.(string))
 			case "stages":
-				stage.StageName = jsonParseStage(v)
+				nameList = jsonParseStage(v)
 			}
 		}
 
-		stageList = append(stageList, stage)
+		for _, name := range nameList {
+			stage := models.Stage{Rule: "ナワバリバトル", MatchType: "レギュラーマッチ", Name: name, StartTime: startTime, EndTime: endTime}
+			stageList = append(stageList, stage)
+		}
 	}
 
 	return stageList
+}
+
+//ステージ情報時刻文字列をtime.Time型に変換して返す
+func convertTermTimeStr(strTime string) time.Time {
+	var timeFormat = "2006-01-02 15:04"
+	result, err := time.Parse(timeFormat, strTime)
+	if err != nil {
+		result = DefUnknownTime
+	}
+	return result
 }
 
 //ステージ情報のステージ名オブジェクトからステージ名リストを生成して返す
