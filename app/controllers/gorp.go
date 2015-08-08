@@ -38,7 +38,7 @@ type GorpController struct {
 }
 
 func (c *GorpController) Begin() revel.Result {
-	revel.INFO.Println("gorp.Begin()")
+	//revel.INFO.Println("gorp.Begin()")
 	txn, err := DbMap.Begin() // ここで開始したtransactionをCOMMITする
 	if err != nil {
 		panic(err)
@@ -48,7 +48,7 @@ func (c *GorpController) Begin() revel.Result {
 }
 
 func (c *GorpController) Commit() revel.Result {
-	revel.INFO.Println("gorp.Comit()")
+	//revel.INFO.Println("gorp.Comit()")
 	if c.Transaction == nil {
 		return nil
 	}
@@ -61,7 +61,7 @@ func (c *GorpController) Commit() revel.Result {
 }
 
 func (c *GorpController) Rollback() revel.Result {
-	revel.INFO.Println("gorp.Rollback")
+	//revel.INFO.Println("gorp.Rollback")
 	if c.Transaction == nil {
 		return nil
 	}

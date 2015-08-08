@@ -3,6 +3,7 @@ package controllers
 import "github.com/revel/revel"
 
 func init() {
+	revel.INFO.Println("call controllers.init")
 	revel.OnAppStart(InitDB)
 	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
 	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)

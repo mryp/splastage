@@ -89,29 +89,15 @@ func (_ tStatic) ServeModule(
 }
 
 
-type tStage struct {}
-var Stage tStage
+type tJobs struct {}
+var Jobs tJobs
 
 
-func (_ tStage) Now(
+func (_ tJobs) Status(
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("Stage.Now", args).Url
-}
-
-func (_ tStage) Insert(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("Stage.Insert", args).Url
-}
-
-func (_ tStage) SelectAll(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
+	return revel.MainRouter.Reverse("Jobs.Status", args).Url
 }
 
 
@@ -124,6 +110,25 @@ func (_ tApp) Index(
 	args := make(map[string]string)
 	
 	return revel.MainRouter.Reverse("App.Index", args).Url
+}
+
+
+type tStage struct {}
+var Stage tStage
+
+
+func (_ tStage) Now(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.Now", args).Url
+}
+
+func (_ tStage) SelectAll(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
 }
 
 

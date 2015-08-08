@@ -1,15 +1,6 @@
 package app
 
-import (
-	"database/sql"
-
-	//_ "github.com/mattn/go-sqlite3"
-	//_ "github.com/naoina/genmai"
-	"github.com/revel/revel"
-	// _ "github.com/go-sql-driver/mysql"
-)
-
-var DB *sql.DB
+import "github.com/revel/revel"
 
 func init() {
 	// Filters is the default set of global filters.

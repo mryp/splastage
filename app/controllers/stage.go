@@ -24,25 +24,29 @@ func (c Stage) Now() revel.Result {
 	return c.RenderJson(getNowStageInfo())
 }
 
-//Insert 現在のステージ情報をDBに保存する
-func (c Stage) Insert() revel.Result {
-	itemList := getNowStageInfo()
-	errorCount := 0
-	for _, item := range itemList {
-		err := models.StageInsertIfNotExists(DbMap, item)
-		if err != nil {
-			errorCount++
-		}
-	}
-
-	return c.RenderJson(errorCount)
-}
-
 //SelectAll 保存されているステージ情報をすべて取得し表示する
 func (c Stage) SelectAll() revel.Result {
 	stageList := models.StageSelectAll(DbMap)
 
 	return c.RenderJson(stageList)
+}
+
+func UpdateStageInfo() bool {
+	revel.INFO.Println("call UpdateStageInfo")
+	itemList := getNowStageInfo()
+	if itemList == nil {
+		revel.INFO.Println("getNowStageInfo error")
+		return false
+	}
+
+	for _, item := range itemList {
+		err := models.StageInsertIfNotExists(DbMap, item)
+		if err != nil {
+			revel.INFO.Println("StageInsertIfNotExists error", err)
+		}
+	}
+
+	return true
 }
 
 //現在の最新データをダウンロードして返す

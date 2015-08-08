@@ -7,7 +7,10 @@ import (
 	"github.com/revel/revel"
 	_ "github.com/mryp/splastage/app"
 	controllers "github.com/mryp/splastage/app/controllers"
+	_ "github.com/mryp/splastage/app/jobs"
 	tests "github.com/mryp/splastage/tests"
+	controllers2 "github.com/revel/modules/jobs/app/controllers"
+	_ "github.com/revel/modules/jobs/app/jobs"
 	controllers1 "github.com/revel/modules/static/app/controllers"
 	_ "github.com/revel/modules/testrunner/app"
 	controllers0 "github.com/revel/modules/testrunner/app/controllers"
@@ -112,27 +115,16 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers.Stage)(nil),
+	revel.RegisterController((*controllers2.Jobs)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "Now",
+				Name: "Status",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "Insert",
-				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "SelectAll",
-				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
+					25: []string{ 
+						"entries",
+					},
 				},
 			},
 			
@@ -147,6 +139,25 @@ func main() {
 				RenderArgNames: map[int][]string{ 
 					10: []string{ 
 					},
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.Stage)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Now",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "SelectAll",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
 				},
 			},
 			
