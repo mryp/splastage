@@ -9,7 +9,10 @@ import (
 func init() {
 	revel.OnAppStart(func() {
 		revel.INFO.Println("call job.init")
-		jobs.Schedule("0 * * * * *", jobs.Func(updateStageInfo))
+
+		//設定方法：https://github.com/revel/cron/blob/master/doc.go
+		jobs.Now(jobs.Func(updateStageInfo))
+		jobs.Schedule("0 1 * * * *", jobs.Func(updateStageInfo))
 	})
 }
 

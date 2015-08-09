@@ -3,7 +3,7 @@ package controllers
 import (
 	"database/sql"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mryp/splastage/app/models"
 	"github.com/revel/revel"
 	"gopkg.in/gorp.v1"
@@ -15,17 +15,18 @@ var (
 
 func InitDB() {
 	revel.INFO.Println("gorp.InitDB()")
-	db, err := sql.Open("sqlite3", "./stage.db")
+	dbDriver, _ := revel.Config.String("db.driver")
+	dbSpec, _ := revel.Config.String("db.spec")
+	db, err := sql.Open(dbDriver, dbSpec)
 	if err != nil {
 		panic(err.Error())
 	}
-	DbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	DbMap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
 	// ここで好きにテーブルを定義する
 	DbMap.AddTableWithName(models.Stage{}, "stage").SetKeys(true, "Id")
 
-	//TODO: テストのためとりあえず全消し
-	DbMap.DropTables()
+	//DbMap.DropTables()
 	err = DbMap.CreateTablesIfNotExists()
 	if err != nil {
 		revel.INFO.Println("Error CreateTablesIfNotExists", err)
