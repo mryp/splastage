@@ -8,9 +8,12 @@ import (
 	_ "github.com/mryp/splastage/app"
 	controllers "github.com/mryp/splastage/app/controllers"
 	_ "github.com/mryp/splastage/app/jobs"
-	controllers1 "github.com/revel/modules/jobs/app/controllers"
+	tests "github.com/mryp/splastage/tests"
+	controllers2 "github.com/revel/modules/jobs/app/controllers"
 	_ "github.com/revel/modules/jobs/app/jobs"
-	controllers0 "github.com/revel/modules/static/app/controllers"
+	controllers1 "github.com/revel/modules/static/app/controllers"
+	_ "github.com/revel/modules/testrunner/app"
+	controllers0 "github.com/revel/modules/testrunner/app/controllers"
 	"github.com/revel/revel/testing"
 )
 
@@ -55,7 +58,40 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers0.Static)(nil),
+	revel.RegisterController((*controllers0.TestRunner)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Index",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+					70: []string{ 
+						"testSuites",
+					},
+				},
+			},
+			&revel.MethodType{
+				Name: "Run",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "suite", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "test", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+					107: []string{ 
+					},
+				},
+			},
+			&revel.MethodType{
+				Name: "List",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers1.Static)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Serve",
@@ -79,7 +115,7 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers1.Jobs)(nil),
+	revel.RegisterController((*controllers2.Jobs)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Status",
@@ -88,20 +124,6 @@ func main() {
 				RenderArgNames: map[int][]string{ 
 					25: []string{ 
 						"entries",
-					},
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*controllers.App)(nil),
-		[]*revel.MethodType{
-			&revel.MethodType{
-				Name: "Index",
-				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-					10: []string{ 
 					},
 				},
 			},
@@ -124,12 +146,34 @@ func main() {
 				RenderArgNames: map[int][]string{ 
 				},
 			},
+			&revel.MethodType{
+				Name: "Test",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.App)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Index",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+					10: []string{ 
+					},
+				},
+			},
 			
 		})
 	
 	revel.DefaultValidationKeys = map[string]map[int]string{ 
 	}
 	testing.TestSuites = []interface{}{ 
+		(*tests.AppTest)(nil),
 	}
 
 	revel.Run(*port)
