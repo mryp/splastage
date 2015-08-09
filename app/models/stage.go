@@ -19,17 +19,19 @@ type Stage struct {
 }
 
 //ステージ情報を追加する
-//すでに存在するときは追加しない
-func StageInsertIfNotExists(dbmap *gorp.DbMap, stage Stage) error {
+//bool = 追加が行われたかどうか
+//error = 追加処理時に発生したエラー（エラーがないときはnil）
+func StageInsertIfNotExists(dbmap *gorp.DbMap, stage Stage) (bool, error) {
 	if StageIsExists(dbmap, stage) {
-		return nil
+		return false, nil
 	}
 	err := dbmap.Insert(&stage)
 	if err != nil {
 		revel.INFO.Println("Insert error ", err)
+		return false, err
+	} else {
+		return true, nil
 	}
-
-	return err
 }
 
 //指定したステージ情報がすでに保存されているかどうか
@@ -53,5 +55,23 @@ func StageSelectAll(dbmap *gorp.DbMap) []Stage {
 	if err != nil {
 		revel.INFO.Println("Select error ", err)
 	}
+	return stageList
+}
+
+//最後のステージ情報を取得する
+func StageSelectLast(dbmap *gorp.DbMap) []Stage {
+	var lastStage Stage
+	err := dbmap.SelectOne(&lastStage, "select * from stage order by endtime desc limit 1")
+	if err != nil {
+		revel.INFO.Println("StageSelectLast SelectOne", err)
+		return nil
+	}
+
+	var stageList []Stage
+	_, err2 := dbmap.Select(&stageList, "select * from stage where endtime=?", lastStage.EndTime)
+	if err2 != nil {
+		revel.INFO.Println("Select error", err)
+	}
+
 	return stageList
 }

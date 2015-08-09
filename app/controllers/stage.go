@@ -19,18 +19,20 @@ type Stage struct {
 //変数
 var DefUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-//Now 現在のステージ情報を取得する
-func (c Stage) Now() revel.Result {
-	return c.RenderJson(getNowStageInfo())
+//Latest 最新のステージ情報を取得する
+func (c Stage) Latest() revel.Result {
+	stageList := models.StageSelectLast(DbMap)
+	return c.RenderJson(stageList)
 }
 
 //SelectAll 保存されているステージ情報をすべて取得し表示する
 func (c Stage) SelectAll() revel.Result {
 	stageList := models.StageSelectAll(DbMap)
-
 	return c.RenderJson(stageList)
 }
 
+//ステージ情報を取得してDBに保存する
+//return bool 更新を行ったときはtrue
 func UpdateStageInfo() bool {
 	revel.INFO.Println("call UpdateStageInfo")
 	itemList := getNowStageInfo()
@@ -39,14 +41,18 @@ func UpdateStageInfo() bool {
 		return false
 	}
 
+	isUpdate := false
 	for _, item := range itemList {
-		err := models.StageInsertIfNotExists(DbMap, item)
+		ret, err := models.StageInsertIfNotExists(DbMap, item)
 		if err != nil {
 			revel.INFO.Println("StageInsertIfNotExists error", err)
 		}
+		if ret {
+			isUpdate = true
+		}
 	}
 
-	return true
+	return isUpdate
 }
 
 //現在の最新データをダウンロードして返す

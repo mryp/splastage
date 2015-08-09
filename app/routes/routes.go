@@ -71,25 +71,6 @@ func (_ tJobs) Status(
 }
 
 
-type tStage struct {}
-var Stage tStage
-
-
-func (_ tStage) Now(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("Stage.Now", args).Url
-}
-
-func (_ tStage) SelectAll(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
-}
-
-
 type tApp struct {}
 var App tApp
 
@@ -99,6 +80,25 @@ func (_ tApp) Index(
 	args := make(map[string]string)
 	
 	return revel.MainRouter.Reverse("App.Index", args).Url
+}
+
+
+type tStage struct {}
+var Stage tStage
+
+
+func (_ tStage) Latest(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.Latest", args).Url
+}
+
+func (_ tStage) SelectAll(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
 }
 
 
