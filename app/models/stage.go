@@ -27,11 +27,11 @@ func StageInsertIfNotExists(dbmap *gorp.DbMap, stage Stage) (bool, error) {
 	}
 	err := dbmap.Insert(&stage)
 	if err != nil {
-		revel.INFO.Println("Insert error ", err)
+		revel.WARN.Println("データ追加失敗", err)
 		return false, err
-	} else {
-		return true, nil
 	}
+
+	return true, nil
 }
 
 //指定したステージ情報がすでに保存されているかどうか
@@ -53,7 +53,8 @@ func StageSelectAll(dbmap *gorp.DbMap) []Stage {
 	var stageList []Stage
 	_, err := dbmap.Select(&stageList, "select * from stage")
 	if err != nil {
-		revel.INFO.Println("Select error ", err)
+		revel.WARN.Println("データ取得失敗", err)
+		return nil
 	}
 	return stageList
 }
@@ -63,14 +64,15 @@ func StageSelectLast(dbmap *gorp.DbMap) []Stage {
 	var lastStage Stage
 	err := dbmap.SelectOne(&lastStage, "select * from stage order by endtime desc limit 1")
 	if err != nil {
-		revel.INFO.Println("StageSelectLast SelectOne", err)
+		revel.WARN.Println("データ取得失敗", err)
 		return nil
 	}
 
 	var stageList []Stage
-	_, err2 := dbmap.Select(&stageList, "select * from stage where endtime=?", lastStage.EndTime)
-	if err2 != nil {
-		revel.INFO.Println("Select error", err2)
+	_, err = dbmap.Select(&stageList, "select * from stage where endtime=?", lastStage.EndTime)
+	if err != nil {
+		revel.WARN.Println("データ取得失敗", err)
+		return nil
 	}
 
 	return stageList
@@ -81,7 +83,8 @@ func StageSelectNow(dbmap *gorp.DbMap) []Stage {
 	var stageList []Stage
 	_, err := dbmap.Select(&stageList, "select * from stage where starttime < now() and endtime >= now()")
 	if err != nil {
-		revel.INFO.Println("Select error", err)
+		revel.WARN.Println("データ取得失敗", err)
+		return nil
 	}
 
 	return stageList

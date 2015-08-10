@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/mryp/splastage/app/controllers"
 	"github.com/revel/modules/jobs/app/jobs"
@@ -20,14 +20,14 @@ func init() {
 
 //初回起動時の最新データ取得処理
 func updateStageInfoInit() {
-	revel.INFO.Println("updateStageInfoInit")
+	revel.INFO.Println("起動時ステージ情報取得開始")
 	ret := controllers.UpdateStageFromIkaring()
-	revel.INFO.Println("UpdateStageFromIkaring ret=" + fmt.Sprintf("%v", ret))
+	revel.INFO.Println("更新結果 ret=" + strconv.FormatBool(ret))
 }
 
 //指定時間ごとの定期的データ取得処理
 func updateStageInfoFromSchedule() {
-	revel.INFO.Println("updateStageInfoFromSchedule")
+	revel.INFO.Println("スケジュールステージ情報取得開始")
 	ret := controllers.UpdateStageFromIkaring()
-	revel.INFO.Println("UpdateStageFromIkaring ret=" + fmt.Sprintf("%v", ret))
+	revel.INFO.Println("更新結果 ret=" + strconv.FormatBool(ret))
 }

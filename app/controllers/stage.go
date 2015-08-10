@@ -32,18 +32,21 @@ var defUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 //Now 現在開催しているステージ情報を取得する
 func (c Stage) Now() revel.Result {
+	revel.INFO.Println("call stage/now")
 	stageList := models.StageSelectNow(DbMap)
 	return c.RenderJson(stageList)
 }
 
 //Latest 最新のステージ情報を取得する
 func (c Stage) Latest() revel.Result {
+	revel.INFO.Println("call stage/latest")
 	stageList := models.StageSelectLast(DbMap)
 	return c.RenderJson(stageList)
 }
 
 //SelectAll 保存されているステージ情報をすべて取得し表示する
 func (c Stage) SelectAll() revel.Result {
+	revel.INFO.Println("call stage/selectall")
 	stageList := models.StageSelectAll(DbMap)
 	return c.RenderJson(stageList)
 }
@@ -54,7 +57,7 @@ func UpdateStageFromNawabari() bool {
 	revel.INFO.Println("call UpdateStageFromNawabari")
 	itemList := getNawabariStageInfo()
 	if itemList == nil {
-		revel.INFO.Println("getNowStageInfo error")
+		revel.WARN.Println("データなし")
 		return false
 	}
 
@@ -68,7 +71,7 @@ func UpdateStageFromIkaring() bool {
 	revel.INFO.Println("call UpdateStageFromIkaring")
 	itemList := getIkaringStageInfo()
 	if itemList == nil {
-		revel.INFO.Println("getIkaringStageInfo error")
+		revel.WARN.Println("データ取得失敗")
 		return false
 	}
 
@@ -84,7 +87,7 @@ func insertStageList(itemList []models.Stage) bool {
 	for _, item := range itemList {
 		ret, err := models.StageInsertIfNotExists(DbMap, item)
 		if err != nil {
-			revel.INFO.Println("StageInsertIfNotExists error", err)
+			revel.WARN.Println("データの追加に失敗", err)
 		}
 		if ret {
 			isUpdate = true
@@ -101,15 +104,16 @@ func getNawabariStageInfo() []models.Stage {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		revel.ERROR.Println("ダウンロードエラー", err)
+		revel.ERROR.Println("ダウンロード失敗", url, err)
 		return nil
 	}
 	defer resp.Body.Close()
 	byteArray, _ := ioutil.ReadAll(resp.Body)
 
-	output, err2 := jsonUnmarshal(byteArray)
-	if err2 != nil {
-		revel.ERROR.Println("変換エラー", err2)
+	var output interface{}
+	output, err = jsonUnmarshal(byteArray)
+	if err != nil {
+		revel.ERROR.Println("Jsonオブジェクト変換失敗", err)
 		return nil
 	}
 
@@ -188,24 +192,28 @@ func getIkaringStageInfo() []models.Stage {
 	password, _ := revel.Config.String("my.nintendo_password")
 	authData := getNintendoAuthorize(urlIkaringAuth, userid, password)
 	if authData == nil {
+		revel.WARN.Println("ニンテンドーネットワーク認証データ取得失敗")
 		return nil
 	}
 
 	//ログインを行いクッキーをセットした接続クライアントを取得する
 	loginClient := getNintendoLoginClient(urlNintendoLoginPost, authData)
 	if loginClient == nil {
+		revel.WARN.Println("ニンテンドーネットワークログイン失敗")
 		return nil
 	}
 
 	//クッキーをセットしたクライアントからHTMLを取得する
 	scheduleHTML := getIkaringScheduleHTML(urlIkaringSchedule, loginClient)
 	if scheduleHTML == "" {
+		revel.WARN.Println("イカリングステージ情報データ取得失敗")
 		return nil
 	}
 
 	//HTMLからステージ情報を取得
 	output := convertIkaringHTML(scheduleHTML)
 	if output == nil {
+		revel.WARN.Println("イカリングステージ情報データ変換失敗")
 		return nil
 	}
 
@@ -216,6 +224,7 @@ func getIkaringStageInfo() []models.Stage {
 func getNintendoAuthorize(authURL string, userid string, password string) url.Values {
 	doc, err := goquery.NewDocument(authURL)
 	if err != nil {
+		revel.WARN.Println("goquery.NewDocument", err)
 		return nil
 	}
 
@@ -256,7 +265,7 @@ func getNintendoLoginClient(postURL string, authData url.Values) *http.Client {
 
 	resp, err := client.PostForm(postURL, authData)
 	if err != nil {
-		revel.INFO.Println("getNintendoLoginClient", err)
+		revel.WARN.Println("client.PostForm", err)
 		return nil
 	}
 	defer resp.Body.Close()
@@ -268,14 +277,15 @@ func getNintendoLoginClient(postURL string, authData url.Values) *http.Client {
 func getIkaringScheduleHTML(getURL string, client *http.Client) string {
 	getdata, err := client.Get(getURL)
 	if err != nil {
-		revel.INFO.Println("getStageScheduleHtml", err)
+		revel.WARN.Println("client.Get", err)
 		return ""
 	}
 	defer getdata.Body.Close()
 
-	body, err2 := ioutil.ReadAll(getdata.Body)
-	if err2 != nil {
-		revel.INFO.Println("getStageScheduleHtml", err2)
+	var body []byte
+	body, err = ioutil.ReadAll(getdata.Body)
+	if err != nil {
+		revel.WARN.Println("ioutil.ReadAll", err)
 		return ""
 	}
 
@@ -286,6 +296,7 @@ func getIkaringScheduleHTML(getURL string, client *http.Client) string {
 func convertIkaringHTML(html string) []models.Stage {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
+		revel.WARN.Println("goquery.NewDocumentFromReader", err)
 		return nil
 	}
 
@@ -326,7 +337,7 @@ func convertStageScheduleTimeStr(strTime string) time.Time {
 	result, err := time.Parse(timeFormat, strconv.Itoa(time.Now().Year())+"/"+strTime)
 	if err != nil {
 		result = defUnknownTime
-		revel.INFO.Println("convertStageScheduleTimeStr strTime=" + strTime)
+		revel.WARN.Println("time.Parse", strTime, err)
 	}
 	return result
 }
