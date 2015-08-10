@@ -9,9 +9,9 @@ import (
 	controllers "github.com/mryp/splastage/app/controllers"
 	_ "github.com/mryp/splastage/app/jobs"
 	tests "github.com/mryp/splastage/tests"
-	controllers0 "github.com/revel/modules/jobs/app/controllers"
+	controllers1 "github.com/revel/modules/jobs/app/controllers"
 	_ "github.com/revel/modules/jobs/app/jobs"
-	controllers1 "github.com/revel/modules/static/app/controllers"
+	controllers0 "github.com/revel/modules/static/app/controllers"
 	_ "github.com/revel/modules/testrunner/app"
 	controllers2 "github.com/revel/modules/testrunner/app/controllers"
 	"github.com/revel/revel/testing"
@@ -58,22 +58,7 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers0.Jobs)(nil),
-		[]*revel.MethodType{
-			&revel.MethodType{
-				Name: "Status",
-				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-					25: []string{ 
-						"entries",
-					},
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*controllers1.Static)(nil),
+	revel.RegisterController((*controllers0.Static)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Serve",
@@ -92,6 +77,21 @@ func main() {
 					&revel.MethodArg{Name: "filepath", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers1.Jobs)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Status",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+					25: []string{ 
+						"entries",
+					},
 				},
 			},
 			
@@ -149,6 +149,7 @@ func main() {
 			&revel.MethodType{
 				Name: "Now",
 				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "id", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},

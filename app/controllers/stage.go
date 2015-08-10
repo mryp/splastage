@@ -31,16 +31,14 @@ type Stage struct {
 var defUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 //Now 現在開催しているステージ情報を取得する
-func (c Stage) Now() revel.Result {
-	revel.INFO.Println("call stage/now")
-	stageList := models.StageSelectNow(DbMap)
-	return c.RenderJson(stageList)
-}
+func (c Stage) Now(id string) revel.Result {
+	if id == "" {
+		return c.Forbidden("パラメーターエラー")
+	}
+	revel.INFO.Println("call stage/now", c.Request.UserAgent(), c.Request.Host, id)
+	models.AccessLogInsert(DbMap, models.AccessLogCreate("stage/now", id, c.Request))
 
-//Latest 最新のステージ情報を取得する
-func (c Stage) Latest() revel.Result {
-	revel.INFO.Println("call stage/latest")
-	stageList := models.StageSelectLast(DbMap)
+	stageList := models.StageSelectNow(DbMap)
 	return c.RenderJson(stageList)
 }
 
@@ -339,5 +337,7 @@ func convertStageScheduleTimeStr(strTime string) time.Time {
 		result = defUnknownTime
 		revel.WARN.Println("time.Parse", strTime, err)
 	}
+
+	revel.INFO.Println("convert time", result, result.UTC())
 	return result
 }

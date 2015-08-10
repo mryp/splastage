@@ -25,6 +25,7 @@ func InitDB() {
 	}
 	DbMap = &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 	DbMap.AddTableWithName(models.Stage{}, "stage").SetKeys(true, "Id")
+	DbMap.AddTableWithName(models.AccessLog{}, "accesslog").SetKeys(true, "Id")
 
 	//DbMap.DropTables()
 	err = DbMap.CreateTablesIfNotExists()
