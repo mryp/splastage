@@ -70,6 +70,17 @@ func StageSelectLast(dbmap *gorp.DbMap) []Stage {
 	var stageList []Stage
 	_, err2 := dbmap.Select(&stageList, "select * from stage where endtime=?", lastStage.EndTime)
 	if err2 != nil {
+		revel.INFO.Println("Select error", err2)
+	}
+
+	return stageList
+}
+
+//現在時刻のステージ情報を取得する
+func StageSelectNow(dbmap *gorp.DbMap) []Stage {
+	var stageList []Stage
+	_, err := dbmap.Select(&stageList, "select * from stage where starttime < now() and endtime >= now()")
+	if err != nil {
 		revel.INFO.Println("Select error", err)
 	}
 

@@ -16,13 +16,25 @@ import (
 	"github.com/revel/revel"
 )
 
+//定数
+const urlNawabariStageJSON = "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/stages_info.json"
+const urlIkaringAuth = "https://splatoon.nintendo.net/users/auth/nintendo"
+const urlNintendoLoginPost = "https://id.nintendo.net/oauth/authorize"
+const urlIkaringSchedule = "https://splatoon.nintendo.net/schedule"
+
 //Stage 構造体
 type Stage struct {
 	GorpController
 }
 
 //変数
-var DefUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
+var defUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+//Now 現在開催しているステージ情報を取得する
+func (c Stage) Now() revel.Result {
+	stageList := models.StageSelectNow(DbMap)
+	return c.RenderJson(stageList)
+}
 
 //Latest 最新のステージ情報を取得する
 func (c Stage) Latest() revel.Result {
@@ -36,16 +48,38 @@ func (c Stage) SelectAll() revel.Result {
 	return c.RenderJson(stageList)
 }
 
-//ステージ情報を取得してDBに保存する
+//UpdateStageFromNawabari ステージ情報を取得してDBに保存する
 //return bool 更新を行ったときはtrue
-func UpdateStageInfo() bool {
-	revel.INFO.Println("call UpdateStageInfo")
-	itemList := getNowStageInfo()
+func UpdateStageFromNawabari() bool {
+	revel.INFO.Println("call UpdateStageFromNawabari")
+	itemList := getNawabariStageInfo()
 	if itemList == nil {
 		revel.INFO.Println("getNowStageInfo error")
 		return false
 	}
 
+	isUpdate := insertStageList(itemList)
+	return isUpdate
+}
+
+//UpdateStageFromIkaring イカリングからステージ情報を取得してDBに保存する
+//return bool 更新を行ったときはtrue
+func UpdateStageFromIkaring() bool {
+	revel.INFO.Println("call UpdateStageFromIkaring")
+	itemList := getIkaringStageInfo()
+	if itemList == nil {
+		revel.INFO.Println("getIkaringStageInfo error")
+		return false
+	}
+
+	isUpdate := insertStageList(itemList)
+	return isUpdate
+}
+
+//ステージ情報リストをDBに保存する
+//同じデータがすでに存在するときは追加しない
+//return bool 追加処理が1件以上行われたときはtrue
+func insertStageList(itemList []models.Stage) bool {
 	isUpdate := false
 	for _, item := range itemList {
 		ret, err := models.StageInsertIfNotExists(DbMap, item)
@@ -61,9 +95,9 @@ func UpdateStageInfo() bool {
 }
 
 //現在の最新データをダウンロードして返す
-func getNowStageInfo() []models.Stage {
+func getNawabariStageInfo() []models.Stage {
 	unixTime := fmt.Sprintf("%d", time.Now().Unix())
-	url := "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/stages_info.json?" + unixTime
+	url := urlNawabariStageJSON + "?" + unixTime
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -97,8 +131,8 @@ func jsonUnmarshal(data []byte) (interface{}, error) {
 func jsonParseRoot(data interface{}) []models.Stage {
 	stageList := []models.Stage{}
 	for _, item := range data.([]interface{}) {
-		startTime := DefUnknownTime
-		endTime := DefUnknownTime
+		startTime := defUnknownTime
+		endTime := defUnknownTime
 		nameList := []string{}
 		for key, v := range item.(map[string]interface{}) {
 			switch key {
@@ -125,7 +159,7 @@ func convertTermTimeStr(strTime string) time.Time {
 	var timeFormat = "2006-01-02 15:04"
 	result, err := time.Parse(timeFormat, strTime)
 	if err != nil {
-		result = DefUnknownTime
+		result = defUnknownTime
 	}
 	return result
 }
@@ -147,41 +181,40 @@ func jsonParseStage(data interface{}) []string {
 	return result
 }
 
-func (c Stage) Test() revel.Result {
+//イカリングからステージ情報を取得して返す
+func getIkaringStageInfo() []models.Stage {
 	//認証用の情報を取得
 	userid, _ := revel.Config.String("my.nintendo_userid")
 	password, _ := revel.Config.String("my.nintendo_password")
-	authUrl := "https://splatoon.nintendo.net/users/auth/nintendo"
-	authData := getNintendoAuthorize(authUrl, userid, password)
+	authData := getNintendoAuthorize(urlIkaringAuth, userid, password)
 	if authData == nil {
-		return c.RenderJson("ERROR getNintendoAuthorize")
+		return nil
 	}
 
 	//ログインを行いクッキーをセットした接続クライアントを取得する
-	loginPostUrl := "https://id.nintendo.net/oauth/authorize"
-	loginClient := getNintendoLoginClient(loginPostUrl, authData)
+	loginClient := getNintendoLoginClient(urlNintendoLoginPost, authData)
 	if loginClient == nil {
-		return c.RenderJson("ERROR2 getNintendoLoginClient")
+		return nil
 	}
 
 	//クッキーをセットしたクライアントからHTMLを取得する
-	scheduleUrl := "https://splatoon.nintendo.net/schedule"
-	scheduleHtml := getStageScheduleHtml(scheduleUrl, loginClient)
-	if scheduleHtml == "" {
-		return c.RenderJson("ERROR3 getStageScheduleHtml")
+	scheduleHTML := getIkaringScheduleHTML(urlIkaringSchedule, loginClient)
+	if scheduleHTML == "" {
+		return nil
 	}
 
 	//HTMLからステージ情報を取得
-	output := convertIkaringHtml(scheduleHtml)
+	output := convertIkaringHTML(scheduleHTML)
 	if output == nil {
-		return c.RenderJson("ERROR4 convertIkaringHtml")
+		return nil
 	}
 
-	return c.RenderJson(output)
+	return output
 }
 
-func getNintendoAuthorize(authUrl string, userid string, password string) url.Values {
-	doc, err := goquery.NewDocument(authUrl)
+//ニンテンドーネットワークID認証用データを取得する
+func getNintendoAuthorize(authURL string, userid string, password string) url.Values {
+	doc, err := goquery.NewDocument(authURL)
 	if err != nil {
 		return nil
 	}
@@ -214,13 +247,14 @@ func getNintendoAuthorize(authUrl string, userid string, password string) url.Va
 	return values
 }
 
-func getNintendoLoginClient(postUrl string, authData url.Values) *http.Client {
+//イカリングログインを行った認証クライアントを作成する
+func getNintendoLoginClient(postURL string, authData url.Values) *http.Client {
 	cookieJar, _ := cookiejar.New(nil)
 	client := &http.Client{
 		Jar: cookieJar,
 	}
 
-	resp, err := client.PostForm(postUrl, authData)
+	resp, err := client.PostForm(postURL, authData)
 	if err != nil {
 		revel.INFO.Println("getNintendoLoginClient", err)
 		return nil
@@ -230,8 +264,9 @@ func getNintendoLoginClient(postUrl string, authData url.Values) *http.Client {
 	return client
 }
 
-func getStageScheduleHtml(getUrl string, client *http.Client) string {
-	getdata, err := client.Get(getUrl)
+//イカリングスケジュールHTMLをダウンロードする
+func getIkaringScheduleHTML(getURL string, client *http.Client) string {
+	getdata, err := client.Get(getURL)
 	if err != nil {
 		revel.INFO.Println("getStageScheduleHtml", err)
 		return ""
@@ -247,15 +282,16 @@ func getStageScheduleHtml(getUrl string, client *http.Client) string {
 	return string(body)
 }
 
-func convertIkaringHtml(html string) []models.Stage {
+//イカリングスケジュールHTMLからステージ情報リストを取得する
+func convertIkaringHTML(html string) []models.Stage {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		return nil
 	}
 
 	stageList := []models.Stage{}
-	startTime := DefUnknownTime
-	endTime := DefUnknownTime
+	startTime := defUnknownTime
+	endTime := defUnknownTime
 	matchType := ""
 	rule := ""
 	name := ""
@@ -283,12 +319,13 @@ func convertIkaringHtml(html string) []models.Stage {
 	return stageList
 }
 
+//イカリングのステージ時刻情報を変換する
+//strTime "8/7 11:00"のような文字列
 func convertStageScheduleTimeStr(strTime string) time.Time {
-
 	var timeFormat = "2006/1/2 15:04"
 	result, err := time.Parse(timeFormat, strconv.Itoa(time.Now().Year())+"/"+strTime)
 	if err != nil {
-		result = DefUnknownTime
+		result = defUnknownTime
 		revel.INFO.Println("convertStageScheduleTimeStr strTime=" + strTime)
 	}
 	return result

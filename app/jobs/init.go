@@ -21,13 +21,13 @@ func init() {
 //初回起動時の最新データ取得処理
 func updateStageInfoInit() {
 	revel.INFO.Println("updateStageInfoInit")
-	ret := controllers.UpdateStageInfo()
-	revel.INFO.Println("UpdateStageInfo ret=" + fmt.Sprintf("%v", ret))
+	ret := controllers.UpdateStageFromIkaring()
+	revel.INFO.Println("UpdateStageFromIkaring ret=" + fmt.Sprintf("%v", ret))
 }
 
 //指定時間ごとの定期的データ取得処理
 func updateStageInfoFromSchedule() {
 	revel.INFO.Println("updateStageInfoFromSchedule")
-	ret := controllers.UpdateStageInfo()
-	revel.INFO.Println("UpdateStageInfo ret=" + fmt.Sprintf("%v", ret))
+	ret := controllers.UpdateStageFromIkaring()
+	revel.INFO.Println("UpdateStageFromIkaring ret=" + fmt.Sprintf("%v", ret))
 }

@@ -30,33 +30,15 @@ func (_ tGorpController) Rollback(
 }
 
 
-type tTestRunner struct {}
-var TestRunner tTestRunner
+type tJobs struct {}
+var Jobs tJobs
 
 
-func (_ tTestRunner) Index(
+func (_ tJobs) Status(
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("TestRunner.Index", args).Url
-}
-
-func (_ tTestRunner) Run(
-		suite string,
-		test string,
-		) string {
-	args := make(map[string]string)
-	
-	revel.Unbind(args, "suite", suite)
-	revel.Unbind(args, "test", test)
-	return revel.MainRouter.Reverse("TestRunner.Run", args).Url
-}
-
-func (_ tTestRunner) List(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("TestRunner.List", args).Url
+	return revel.MainRouter.Reverse("Jobs.Status", args).Url
 }
 
 
@@ -89,21 +71,58 @@ func (_ tStatic) ServeModule(
 }
 
 
-type tJobs struct {}
-var Jobs tJobs
+type tTestRunner struct {}
+var TestRunner tTestRunner
 
 
-func (_ tJobs) Status(
+func (_ tTestRunner) Index(
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("Jobs.Status", args).Url
+	return revel.MainRouter.Reverse("TestRunner.Index", args).Url
+}
+
+func (_ tTestRunner) Run(
+		suite string,
+		test string,
+		) string {
+	args := make(map[string]string)
+	
+	revel.Unbind(args, "suite", suite)
+	revel.Unbind(args, "test", test)
+	return revel.MainRouter.Reverse("TestRunner.Run", args).Url
+}
+
+func (_ tTestRunner) List(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("TestRunner.List", args).Url
+}
+
+
+type tApp struct {}
+var App tApp
+
+
+func (_ tApp) Index(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("App.Index", args).Url
 }
 
 
 type tStage struct {}
 var Stage tStage
 
+
+func (_ tStage) Now(
+		) string {
+	args := make(map[string]string)
+	
+	return revel.MainRouter.Reverse("Stage.Now", args).Url
+}
 
 func (_ tStage) Latest(
 		) string {
@@ -117,25 +136,6 @@ func (_ tStage) SelectAll(
 	args := make(map[string]string)
 	
 	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
-}
-
-func (_ tStage) Test(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("Stage.Test", args).Url
-}
-
-
-type tApp struct {}
-var App tApp
-
-
-func (_ tApp) Index(
-		) string {
-	args := make(map[string]string)
-	
-	return revel.MainRouter.Reverse("App.Index", args).Url
 }
 
 
