@@ -14,6 +14,7 @@ type Stage struct {
 	Name      string    `db:"name" json:"name"`
 	Rule      string    `db:"rule" json:"rule"`
 	MatchType string    `db:"matchtype" json:"matchtype"`
+	ImageURL  string    `db:"imageurl,size:1024" json:"imageurl"`
 	StartTime time.Time `db:"starttime" json:"starttime"`
 	EndTime   time.Time `db:"endtime" json:"endtime"`
 }

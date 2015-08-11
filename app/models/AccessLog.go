@@ -22,7 +22,7 @@ func AccessLogCreate(action string, clientId string, request *revel.Request) Acc
 	//timeをDBに保存すると必ずUTCで保存されるようなのでUTCをJSTと一致させる
 	now := time.Now().UTC().Add(9 * time.Hour)
 	revel.INFO.Println("now time", now, now.UTC())
-	return AccessLog{Action: action, ClientID: clientId, Host: request.Host, UserAgent: request.UserAgent(), Uptime: now}
+	return AccessLog{Action: action, ClientID: clientId, Host: request.RemoteAddr, UserAgent: request.UserAgent(), Uptime: now}
 }
 
 func AccessLogInsert(dbmap *gorp.DbMap, accessLog AccessLog) error {

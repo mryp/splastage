@@ -303,6 +303,7 @@ func convertIkaringHTML(html string) []models.Stage {
 	endTime := defUnknownTime
 	matchType := ""
 	rule := ""
+	imageURL := ""
 	name := ""
 	doc.Find("span").Each(func(_ int, s *goquery.Selection) {
 		if s.HasClass("stage-schedule") {
@@ -318,9 +319,12 @@ func convertIkaringHTML(html string) []models.Stage {
 			matchType = "ガチマッチ"
 		} else if s.HasClass("rule-description") {
 			rule = s.Text()
+		} else if s.HasClass("map-image retina-support") {
+			imageURL, _ = s.Attr("data-retina-image")
+			imageURL = "https://splatoon.nintendo.net" + imageURL
 		} else if s.HasClass("map-name") {
 			name = s.Text()
-			stage := models.Stage{Rule: rule, MatchType: matchType, Name: name, StartTime: startTime, EndTime: endTime}
+			stage := models.Stage{Rule: rule, MatchType: matchType, Name: name, ImageURL: imageURL, StartTime: startTime, EndTime: endTime}
 			stageList = append(stageList, stage)
 		}
 	})
