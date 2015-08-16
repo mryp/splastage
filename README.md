@@ -1,7 +1,7 @@
 ## Splastage
 
 スプラトゥーンのステージ情報をイカリングから収集し配信用APIを提供するサーバープログラムです。
-配信APIを使用するアプリケーションについてはSplastageClient（https://github.com/mryp/SplastageClient）を参照してください。
+配信APIを使用するアプリケーションについては https://github.com/mryp/SplastageClient を参照してください。
 
 ## ライブラリ
 
