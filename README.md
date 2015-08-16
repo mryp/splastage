@@ -1,14 +1,11 @@
-# splastage
-スプラトゥーンのステージ情報を取得し管理するWebアプリケーション
-
 ## Splastage
 
 スプラトゥーンのステージ情報をイカリングから収集し配信用APIを提供するサーバープログラムです。
-なお、Go言語で作成されています。
+配信APIを使用するアプリケーションについてはSplastageClient（https://github.com/mryp/SplastageClient）を参照してください。
 
 ## ライブラリ
 
-下記のライブラリを使用します。
+下記のライブラリを使用しています。
 
 Revel（Webフレームワーク）
 https://revel.github.io/
