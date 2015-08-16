@@ -42,10 +42,15 @@ func (c Stage) Now(id string) revel.Result {
 	return c.RenderJson(stageList)
 }
 
-//SelectAll 保存されているステージ情報をすべて取得し表示する
-func (c Stage) SelectAll() revel.Result {
-	revel.INFO.Println("call stage/selectall")
-	stageList := models.StageSelectAll(DbMap)
+//CurrentLater 現在時刻以降開催しているステージ情報を取得する（現在時刻を含む）
+func (c Stage) CurrentLater(id string) revel.Result {
+	if id == "" {
+		return c.Forbidden("パラメーターエラー")
+	}
+	revel.INFO.Println("call stage/carrentlater", c.Request.UserAgent(), c.Request.Host, id)
+	models.AccessLogInsert(DbMap, models.AccessLogCreate("stage/carrentlater", id, c.Request))
+
+	stageList := models.StageSelectCurrentLater(DbMap)
 	return c.RenderJson(stageList)
 }
 

@@ -119,8 +119,9 @@ func main() {
 				},
 			},
 			&revel.MethodType{
-				Name: "SelectAll",
+				Name: "CurrentLater",
 				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "id", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},

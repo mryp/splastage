@@ -96,11 +96,13 @@ func (_ tStage) Now(
 	return revel.MainRouter.Reverse("Stage.Now", args).Url
 }
 
-func (_ tStage) SelectAll(
+func (_ tStage) CurrentLater(
+		id string,
 		) string {
 	args := make(map[string]string)
 	
-	return revel.MainRouter.Reverse("Stage.SelectAll", args).Url
+	revel.Unbind(args, "id", id)
+	return revel.MainRouter.Reverse("Stage.CurrentLater", args).Url
 }
 
 

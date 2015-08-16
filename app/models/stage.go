@@ -90,3 +90,15 @@ func StageSelectNow(dbmap *gorp.DbMap) []Stage {
 
 	return stageList
 }
+
+//現在時刻以降のステージ情報を取得する
+func StageSelectCurrentLater(dbmap *gorp.DbMap) []Stage {
+	var stageList []Stage
+	_, err := dbmap.Select(&stageList, "select * from stage where endtime >= now() order by endtime asc")
+	if err != nil {
+		revel.WARN.Println("データ取得失敗", err)
+		return nil
+	}
+
+	return stageList
+}
