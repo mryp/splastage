@@ -16,19 +16,25 @@ import (
 	"github.com/revel/revel"
 )
 
-//定数
-const urlNawabariStageJSON = "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/stages_info.json"
-const urlIkaringAuth = "https://splatoon.nintendo.net/users/auth/nintendo"
-const urlNintendoLoginPost = "https://id.nintendo.net/oauth/authorize"
-const urlIkaringSchedule = "https://splatoon.nintendo.net/schedule"
-
 //Stage 構造体
 type Stage struct {
 	GorpController
 }
 
+//定数
+const (
+	urlNawabariStageJSON    = "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/stages_info.json"
+	urlFesStageJSON         = "http://s3-ap-northeast-1.amazonaws.com/splatoon-data.nintendo.net/fes_info.json"
+	urlIkaringAuth          = "https://splatoon.nintendo.net/users/auth/nintendo"
+	urlNintendoLoginPost    = "https://id.nintendo.net/oauth/authorize"
+	urlIkaringSchedule      = "https://splatoon.nintendo.net/schedule"
+	urlNawabariImageBaseURL = "http://www.nintendo.co.jp/wiiu/agmj/stage/images/stage/"
+)
+
 //変数
-var defUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
+var (
+	defUnknownTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
+)
 
 //Now 現在開催しているステージ情報を取得する
 func (c Stage) Now(id string) revel.Result {
@@ -58,7 +64,8 @@ func (c Stage) CurrentLater(id string) revel.Result {
 //return bool 更新を行ったときはtrue
 func UpdateStageFromNawabari() bool {
 	revel.INFO.Println("call UpdateStageFromNawabari")
-	itemList := getNawabariStageInfo()
+	//itemList := getNawabariStageInfo()//ナワバリ情報
+	itemList := getFesStageInfo() //フェス情報
 	if itemList == nil {
 		revel.WARN.Println("データなし")
 		return false
@@ -123,6 +130,28 @@ func getNawabariStageInfo() []models.Stage {
 	return jsonParseRoot(output)
 }
 
+func getFesStageInfo() []models.Stage {
+	unixTime := fmt.Sprintf("%d", time.Now().Unix())
+	url := urlFesStageJSON + "?" + unixTime
+
+	resp, err := http.Get(url)
+	if err != nil {
+		revel.ERROR.Println("ダウンロード失敗", url, err)
+		return nil
+	}
+	defer resp.Body.Close()
+	byteArray, _ := ioutil.ReadAll(resp.Body)
+
+	var output interface{}
+	output, err = jsonUnmarshal(byteArray)
+	if err != nil {
+		revel.ERROR.Println("Jsonオブジェクト変換失敗", err)
+		return nil
+	}
+
+	return jsonParseFesRoot(output)
+}
+
 //JSONダウンロードデータをデータオブジェクト（interface{}）に変換して返す
 func jsonUnmarshal(data []byte) (interface{}, error) {
 	var outputData interface{}
@@ -141,6 +170,7 @@ func jsonParseRoot(data interface{}) []models.Stage {
 		startTime := defUnknownTime
 		endTime := defUnknownTime
 		nameList := []string{}
+		imageList := []string{}
 		for key, v := range item.(map[string]interface{}) {
 			switch key {
 			case "datetime_term_begin":
@@ -148,14 +178,41 @@ func jsonParseRoot(data interface{}) []models.Stage {
 			case "datetime_term_end":
 				endTime = convertTermTimeStr(v.(string))
 			case "stages":
-				nameList = jsonParseStage(v)
+				nameList, imageList = jsonParseStage(v)
 			}
 		}
 
-		for _, name := range nameList {
-			stage := models.Stage{Rule: "ナワバリバトル", MatchType: "レギュラーマッチ", Name: name, StartTime: startTime, EndTime: endTime}
+		for i, name := range nameList {
+			imageURL := imageList[i]
+			stage := models.Stage{Rule: "ナワバリバトル", MatchType: "レギュラーマッチ", Name: name, StartTime: startTime, EndTime: endTime, ImageURL: imageURL}
 			stageList = append(stageList, stage)
 		}
+	}
+
+	return stageList
+}
+
+func jsonParseFesRoot(data interface{}) []models.Stage {
+	stageList := []models.Stage{}
+	startTime := defUnknownTime
+	endTime := defUnknownTime
+	nameList := []string{}
+	imageList := []string{}
+	for key, v := range data.(map[string]interface{}) {
+		switch key {
+		case "datetime_fes_begin":
+			startTime = convertTermTimeStr(v.(string))
+		case "datetime_fes_end":
+			endTime = convertTermTimeStr(v.(string))
+		case "fes_stages":
+			nameList, imageList = jsonParseStage(v)
+		}
+	}
+
+	for i, name := range nameList {
+		imageURL := imageList[i]
+		stage := models.Stage{Rule: "ナワバリバトル", MatchType: "フェスマッチ", Name: name, StartTime: startTime, EndTime: endTime, ImageURL: imageURL}
+		stageList = append(stageList, stage)
 	}
 
 	return stageList
@@ -172,20 +229,22 @@ func convertTermTimeStr(strTime string) time.Time {
 }
 
 //ステージ情報のステージ名オブジェクトからステージ名リストを生成して返す
-func jsonParseStage(data interface{}) []string {
-	result := []string{}
+func jsonParseStage(data interface{}) ([]string, []string) {
+	nameList := []string{}
+	imageURLList := []string{}
 	for _, stage := range data.([]interface{}) {
 		for key, value := range stage.(map[string]interface{}) {
 			switch key {
 			case "id":
-				//何もしない
+				imageURL := "http://www.nintendo.co.jp/wiiu/agmj/stage/images/stage/" + value.(string) + ".png"
+				imageURLList = append(imageURLList, imageURL)
 			case "name":
-				result = append(result, value.(string))
+				nameList = append(nameList, value.(string))
 			}
 		}
 	}
 
-	return result
+	return nameList, imageURLList
 }
 
 //イカリングからステージ情報を取得して返す
