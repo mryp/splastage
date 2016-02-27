@@ -7,18 +7,16 @@
 
 下記のライブラリを使用しています。
 
-Revel（Webフレームワーク）
+Revel（Webフレームワーク）  
 https://revel.github.io/
 
-Gorp（SQL操作）
+Gorp（SQL操作）  
 https://github.com/go-gorp/gorp
 
-goquery（HTMLパーサ）
+goquery（HTMLパーサ）  
 https://github.com/PuerkitoBio/goquery
 
 ## LICENSE
-
-copyright (c) 2015 PORING SOFT  
 
 MITライセンスで公開しています。  
 詳細は LICENSE.TXT を参照してください。
